@@ -1,0 +1,7 @@
+# Remix / node / build
+node_modules/
+artifacts/
+cache/
+.env
+*.zip
+.DS_Store
