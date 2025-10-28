@@ -1,82 +1,134 @@
-# 💰 KipuBank — Bóveda personal en ETH con límites seguros
 
-Contrato inteligente en Solidity que permite a los usuarios **depositar y retirar ETH (tokens nativos)** en una bóveda personal, cumpliendo buenas prácticas del Módulo 2:
-- Límite **global** de depósitos (`BANK_CAP`) definido en el constructor.
-- Límite **máximo por retiro** (`WITHDRAW_CAP`) inmutable por transacción.
-- **Eventos** en depósitos y retiros.
-- **Contadores** de operaciones.
-- Seguridad con patrón **Checks → Effects → Interactions**.
-- Mensajes claros usando **`require()`** (versión básica sin errores personalizados).
+# 💰 KipuBank — Personal ETH Vault with Safe Limits
+
+A Solidity smart contract that allows users to **deposit and withdraw ETH (native tokens)** into a personal vault while enforcing best security and design practices (Module 2).
 
 ---
 
-## ✨ Funcionalidades
-- `deposit()` (`public payable`): deposita ETH en tu cuenta dentro del contrato.
-- `withdraw(uint256 amount)` (`external`): retira ETH (≤ `WITHDRAW_CAP` y ≤ tu saldo).
-- `viewBalance()` (`external view`): consulta tu saldo interno.
-- `receive()` / `fallback()` (`external payable`): si envías ETH directo, se trata como depósito.
-- Contadores: `depositCount`, `withdrawCount`.
-- Eventos: `Deposited(user, amount)`, `Withdrawn(user, amount)`.
+## ✨ Features
+- Global **deposit limit** (`BANK_CAP`) defined in the constructor.
+- Maximum **withdraw limit per transaction** (`WITHDRAW_CAP`) defined as immutable.
+- **Events** for deposits and withdrawals.
+- **Operation counters** for deposits and withdrawals.
+- Security implemented using the **Checks → Effects → Interactions (CEI)** pattern.
+- Clear error messages using `require()` (basic version without custom errors).
 
 ---
 
-## 🧩 Variables clave
-- `BANK_CAP` (`immutable`): tope global de depósitos (en wei).
-- `WITHDRAW_CAP` (`immutable`): tope por retiro (en wei).
-- `balanceOf(address)`: mapping de saldos por usuario.
-- `totalDeposited`: total global depositado.
+## 🧩 Key Variables
+- `BANK_CAP` (`immutable`): total global deposit limit (in wei).
+- `WITHDRAW_CAP` (`immutable`): maximum withdraw amount per transaction (in wei).
+- `balanceOf(address)`: mapping of user balances.
+- `totalDeposited`: total global ETH deposited in the contract.
 
 ---
 
-## 🧱 Seguridad
-- **CEI** en `withdraw`: primero validaciones (`require`), luego actualización de estado, y al final la interacción externa (envío de ETH).
-- Envío nativo con `.call{value: amount}("")` + `require(success, "Error en la transferencia")`.
-- Límites para evitar retiros grandes y tope de TVL (`BANK_CAP`).
+## ⚙️ Functions
+- `deposit()` (`public payable`): deposit ETH into your account within the contract.
+- `withdraw(uint256 amount)` (`external`): withdraw ETH (≤ `WITHDRAW_CAP` and ≤ your internal balance).
+- `viewBalance()` (`external view`): check your own balance.
+- `receive()` / `fallback()` (`external payable`): treat any direct ETH sent to the contract as a deposit.
+- Counters: `depositCount`, `withdrawCount`.
+- Events: `Deposited(address user, uint256 amount)` and `Withdrawn(address user, uint256 amount)`.
 
 ---
 
-## ⚙️ Deploy local (Remix VM)
-1. Abre [Remix](https://remix.ethereum.org/).
-2. Crea `contracts/KipuBank.sol` y pega el contrato.
-3. Compila con **Solidity 0.8.24**, optimization ON (runs 200).
-4. Deploy (Remix VM):
+## 🧱 Security
+- Implements **CEI** (Checks–Effects–Interactions) pattern in `withdraw`:
+  1. Validate conditions (`require()`).
+  2. Update internal state.
+  3. Perform external ETH transfer.
+- Uses `.call{value: amount}("")` + `require(success, "Transfer failed")` for safe transfers.
+- Global and per-transaction limits prevent excessive withdrawals or large TVL exposure.
+
+---
+
+## 🧪 Local Deployment (Remix VM)
+1. Open [Remix IDE](https://remix.ethereum.org/).
+2. Create the file: `contracts/KipuBank.sol` and paste your contract code.
+3. Compile with:
+   - Compiler: **Solidity 0.8.24**
+   - Optimization: **ON (200 runs)**
+4. Deploy (Environment: Remix VM)
    - `_bankCap`: `10000` (wei)
    - `_withdrawCap`: `100` (wei)
 
-### Pruebas rápidas
-- **Depositar**: en `VALUE` escribe, p. ej., `50` (unidad **wei**) → `deposit()`.
-- **Retirar**: 
-  - `withdraw(80)` → OK si saldo ≥ 80 y cap=100.
-  - `withdraw(120)` → falla (“Excede el limite por retiro”).
-  - `withdraw(80)` sin haber depositado → falla (“Saldo insuficiente”).
-- **Consultar**: `viewBalance()` y/o `balanceOf(<tuAddress>)`.
+### Quick Tests
+- **Deposit:**  
+  Set `VALUE = 50` (wei) → click `deposit()`.
+- **Withdraw:**  
+  - `withdraw(80)` → ✅ OK if balance ≥ 80 and cap = 100.  
+  - `withdraw(120)` → ❌ fails (“Exceeds withdraw limit”).  
+  - `withdraw(80)` without deposit → ❌ fails (“Insufficient balance”).
+- **View balance:**  
+  Run `viewBalance()` or `balanceOf(<yourAddress>)`.
 
 ---
 
-## 🌐 Deploy en Sepolia (testnet)
-1. MetaMask en **Sepolia** con ETH de faucet.
-2. En Remix → **Deploy & Run** → Environment: **Injected Provider – MetaMask**.
-3. Constructor:
+## 🌐 Sepolia Deployment (Testnet)
+1. Switch MetaMask to **Sepolia network** with faucet ETH.
+2. In Remix → **Deploy & Run Transactions**, select:  
+   Environment: **Injected Provider – MetaMask**.
+3. Set constructor parameters:
    - `_bankCap = 10000`
    - `_withdrawCap = 100`
-4. Deploy y confirma en MetaMask.
+4. Click **Deploy** and confirm in MetaMask.
 
-### Verificación en Etherscan (Sepolia)
-1. Abre tu contrato en `sepolia.etherscan.io`.
-2. **Code → Verify and Publish**:
-   - Compiler: **0.8.24**
+---
+
+## ✅ Etherscan Verification
+1. Go to your contract on [Sepolia Etherscan](https://sepolia.etherscan.io/).
+2. Open **Code → Verify and Publish**.
+3. Use the following settings:
+   - Compiler: `v0.8.24+commit.e11b9ed9`
    - License: **MIT**
-   - Optimization: **Yes** (runs 200)
-3. Opción Single file → pega `KipuBank.sol` → Verify.
+   - Optimization: **Yes (200 runs)**
+4. Choose “Single file” and paste your full Solidity code.  
+5. Paste constructor ABI-encoded values:
+0000000000000000000000000000000000000000000000000000000000002710
+0000000000000000000000000000000000000000000000000000000000000064
+
 
 ---
 
-## 🔗 Entregables (completa estos campos)
-- **Dirección del contrato (Sepolia):** `<0x...>`
-- **Código verificado:** `<https://sepolia.etherscan.io/address/0x...#code>`
-- **Repositorio GitHub (público):** `<https://github.com/<tu-usuario>/kipu-bank>`
+## 🔗 Deliverables
+- **Contract Address (Sepolia):** `0x17deC92be5Bc201d81f57C40FAcff670362e3018`
+- **Verified Source Code:**  
+[View on Etherscan](https://sepolia.etherscan.io/address/0x17deC92be5Bc201d81f57C40FAcff670362e3018#code)
+- **GitHub Repository:**  
+[https://github.com/NKGarzonGrajales/KipuBank_02](https://github.com/NKGarzonGrajales/KipuBank_02)
 
 ---
 
-## 📁 Estructura del repo
+## 🧱 Repository Structure
+
+KipuBank_02/
+│
+├── contracts/
+│ ├── 4_KipuBank.sol
+│ ├── 1_Storage.sol
+│ ├── 2_Owner.sol
+│ ├── 3_Ballot.sol
+│
+├── scripts/
+│ ├── deploy_with_web3.ts
+│ ├── deploy_with_ethers.ts
+│
+├── tests/
+│ ├── Ballot_test.sol
+│ ├── storage_test.js
+│
+├── remix.config.json
+├── .prettierrc.json
+├── README.md
+└── .gitignore
+
+
+---
+
+## 🧑‍💻 Author
+**N.K.G.G. (Nidia Karina Garzón Grajales)**  
+Full-Stack Developer | Solidity & Web3 Student  
+📍 Colombia  
+🪙 “Learning never stops — blockchain is the new internet.”
 
