@@ -96,7 +96,7 @@ A Solidity smart contract that allows users to **deposit and withdraw ETH (nativ
 - **Verified Source Code:**  
 [View on Etherscan](https://sepolia.etherscan.io/address/0x17deC92be5Bc201d81f57C40FAcff670362e3018#code)
 - **GitHub Repository:**  
-[https://github.com/NKGarzonGrajales/KipuBank_02](https://github.com/NKGarzonGrajales/KipuBank_02)
+[https://github.com/NKGarzonGrajales/KipuBank_01](https://github.com/NKGarzonGrajales/KipuBank_01)
 
 ---
 
