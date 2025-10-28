@@ -31,7 +31,7 @@ contract KipuBank {
 
     /* -------------------------------------------------------
        EVENTOS
-       (sirven para registrar acciones importantes en la blockchain)
+       (sirven para registrar acciones importantes en blockchain)
     -------------------------------------------------------- */
     event Deposited(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount);
@@ -72,6 +72,7 @@ contract KipuBank {
     /* -------------------------------------------------------
        FUNCION PARA RETIRAR (EXTERNAL)
        Permite retirar ETH limitado por WITHDRAW_CAP
+       @param amount Monto en wei a retirar
     -------------------------------------------------------- */
     function withdraw(uint256 amount) external {
         // 1️⃣ CHECKS
@@ -79,16 +80,19 @@ contract KipuBank {
         require(amount <= WITHDRAW_CAP, "Excede el limite por retiro");
         require(balanceOf[msg.sender] >= amount , "Saldo insuficiente");
 
-        // 2️⃣ EFFECTS
+        // 2️⃣ EFFECTS (ahora tambien descuenta del total global)
         balanceOf[msg.sender] -= amount;
+        totalDeposited -= amount;
         withdrawCount++;
 
-        // 3️⃣ INTERACTIONS (envio ETH al usuario)
-        (bool success, ) = payable(msg.sender).call{value: amount}("");
-        require(success, "Error en la transferencia");
+        // 3️⃣ INTERACTIONS uso de funcion privada segura
 
-        emit Withdrawn(msg.sender, amount);
+      _safeTransfer(msg.sender, amount);
+      
+      emit Withdrawn(msg.sender, amount);
+
     }
+       
 
     /* -------------------------------------------------------
        FUNCION DE SOLO LECTURA (VIEW)
@@ -107,8 +111,20 @@ contract KipuBank {
     }
 
     fallback() external payable {
-        deposit(); // si envian datos erroneos, tambien se deposita
+           require(msg.value > 0, "Sin ETH");
+        deposit();  //Fallback redirige a deposit() si se envian fondos
     }
-}
+        
+/**
+    --------------------------
+     Funcion privada para transferencias nativas seguras
+    ------------------------*/
+     
+    function _safeTransfer(address to, uint256 amount) private {
+        (bool ok, ) = payable(to).call{value: amount}("");
+        require(ok, "Error en la transferencia");
+    }
 
+ 
+}
 
